@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Musical - Panel de Control y Cartones</title>
+    <style>
+        /* --- ESTILOS GENERALES Y FUENTES --- */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 3em;
+            margin: 0;
+            letter-spacing: 5px;
+        }
+
+        /* --- CONTENEDORES PRINCIPALES - FLEX VERTICAL --- */
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            /* Apila el panel y los cartones */
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* --- NUEVO PANEL DE ESTADO DE GANADORES --- */
+        #winner-display-container {
+            background-color: #34495e;
+            /* Fondo oscuro */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        #winner-display-container h2 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            color: #f39c12;
+            /* Color de acento */
+        }
+
+        .winner-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .winner-list-line {
+            color: #f1c40f;
+            /* Amarillo para Línea */
+            padding: 5px 10px;
+            border: 2px solid #f1c40f;
+            border-radius: 5px;
+        }
+
+        .winner-list-bingo {
+            color: #2ecc71;
+            /* Verde para Bingo */
+            padding: 5px 10px;
+            border: 2px solid #2ecc71;
+            border-radius: 5px;
+        }
+
+        /* --- PANEL DE CONTROL (BOMBÍN) - SUPERIOR --- */
+        #master-control {
+            width: 100%;
+            padding: 25px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            height: auto;
+            overflow-y: visible;
+            border: 2px solid #e74c3c;
+        }
+
+        #master-control h2 {
+            font-family: 'Bebas Neue', cursive;
+            color: #e74c3c;
+            border-bottom: 3px solid #f39c12;
+            padding-bottom: 5px;
+            margin-top: 0;
+            letter-spacing: 1px;
+        }
+
+        #song-list-container {
+            list-style: none;
+            padding: 0;
+            /* Permite que la lista de canciones fluya horizontalmente */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+
+            /* **CAMBIO CLAVE ANTERIOR: ELIMINAMOS LA RESTRICCIÓN DE ALTURA Y SCROLL** */
+        }
+
+        #song-list-container li {
+            /* MEJORA DE ESTILO PARA LISTA HORIZONTAL */
+            width: 300px;
+            margin-bottom: 0;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #ecf0f1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        #song-list-container li:hover {
+            background-color: #f0f0f0;
+        }
+
+        #song-list-container li:last-child {
+            border-bottom: 1px solid #ddd;
+        }
+
+        #song-list-container input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.3);
+            accent-color: #2ecc71;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #song-list-container input:checked+span {
+            color: #27ae60;
+            font-weight: 600;
+            text-decoration: line-through;
+        }
+
+        /* --- CONTENEDOR DE CARTONES --- */
+        #tables-container {
+            flex-grow: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        /* --- ESTILOS DE CARTÓN (Sin cambios en el cartón en sí) --- */
+        .bingo-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Montserrat', sans-serif;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+        }
+
+        .bingo-card.line-winner {
+            box-shadow: 0 0 15px 5px #f1c40f;
+        }
+
+        .bingo-card.bingo-winner {
+            box-shadow: 0 0 20px 7px #2ecc71;
+            transform: scale(1.02);
+        }
+
+        .bingo-header {
+            background: #e74c3c;
+            color: white;
+            font-size: 1.5em;
+            font-weight: 700;
+            padding: 10px 0;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            flex: 1;
+            gap: 5px;
+            padding: 10px;
+            background-color: #f7f7f7;
+        }
+
+        .bingo-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #555;
+            border-radius: 8px;
+            box-sizing: border-box;
+            padding: 5px;
+            word-break: break-word;
+            line-height: 1.2;
+            background-color: #ecf0f1;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ESTILO PARA CANCIÓN MARCADA */
+        .bingo-cell.marked {
+            background-color: #2ecc71;
+            color: white;
+            font-weight: 700;
+            transform: scale(1.05);
+        }
+
+        /* --- ESTILOS DE AVISOS (LO NO INTERACTIVO) --- */
+        .notification-container {
+            padding: 5px 10px 10px;
+            text-align: center;
+        }
+
+        .notification {
+            font-size: 0.9em;
+            font-weight: 700;
+            padding: 5px;
+            margin-top: 5px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .notification.line {
+            background-color: #f1c40f;
+            color: #333;
+        }
+
+        .notification.bingo {
+            background-color: #27ae60;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>BINGO MUSICAL - PANEL DE CONTROL</h1>
+        <p>Marca las canciones que van sonando para activar automáticamente las Líneas y Bingos.</p>
+    </header>
+
+    <div id="main-container">
+
+        <div id="winner-display-container">
+            </div>
+
+        <div id="master-control">
+            <h2>Canciones Sonando (Marcar)</h2>
+            <ul id="song-list-container">
+                </ul>
+        </div>
+
+        <div id="tables-container">
+            </div>
+    </div>
+
+    <script>
+        // --- 1. DATA: Canciones Únicas y Cartones de Bingo (Sin cambios) ---
+        const BINGO_CARDS_DATA = [
+            { id: 1, name: "GILICUMPLE 1", songs: ["El Marginal - Sara Hebe", "A Message to You Rudy - The Specials", "El Muerto Vivo - Peret", "Hoy - Los De Marras", "A la sombra de la sierra - La Raíz", "Reina de los angelotes - Huecco", "Zorra - Bad Gyal", "Noche De Sexo - Wisin & Yandel", "El Perro Verde - Marea"] },
+            { id: 2, name: "GILICUMPLE 2", songs: ["La Canción Del Velero - La Fiesta", "Fruta Fresca - Carlos Vives", "MACAULAY CULKIN - Ladilla Rusa", "Aborronà - Malifeta", "Amigos para Siempre - Los Manolos", "Don't Stop Me Now - Queen", "Orgullo Banderillero - SFDK", "Crîtto de lâ Nabahâ - Califato ¾", "Yo Quiero Bailar - Sonia Y Selena"] },
+            { id: 3, name: "GILICUMPLE 3", songs: ["La mandanga - El Fary", "Bella ciao - Talco", "Niño Soldado - Ska-P", "El Venao - Los Cantantes", "Gasolina - Daddy Yankee", "El Perro Verde - Marea", "So payaso - Extremoduro", "Una Lluna a L'Aigua - Txarango", "La Bolsa - Bersuit Vergarabat"] },
+            { id: 4, name: "GILICUMPLE 4", songs: ["Como Yo Te Amo - Rocío Jurado", "Wonderwall - Oasis", "El Venao - Los Cantantes", "Fruta Fresca - Carlos Vives", "Crîtto de lâ Nabahâ - Califato ¾", "Los Coches Chocones - Los Desgraciaus", "Noche De Sexo - Wisin & Yandel", "Atrévete-Te-Te - Calle 13", "Baile De Los Pobres - Calle 13"] },
+            { id: 5, name: "GILICUMPLE 5", songs: ["Los Perros - Arde Bogotá", "Mucha Policía, Poca Diversión - Eskorbuto", "Don't Stop Me Now - Queen", "malibU - rusowsky", "La conejita de Papa Noel - Leticia Sabater", "Wannabe - Spice Girls", "MUSSEGU - Figa Flawas", "Como Yo Te Amo - Rocío Jurado", "Agradecido - Rosendo"] },
+            { id: 6, name: "GILICUMPLE 6", songs: ["Crîtto de lâ Nabahâ - Califato ¾", "Hoy - Los De Marras", "MUSSEGU - Figa Flawas", "La mandanga - El Fary", "Fruta Fresca - Carlos Vives", "Niño Soldado - Ska-P", "malibU - rusowsky", "Song 2 - Blur", "Los Coches Chocones - Los Desgraciaus"] },
+            { id: 7, name: "GILICUMPLE 7", songs: ["Rosas - La Oreja de Van Gogh", "Achilipu - Las Grecas", "Mierda de Ciudad - Kortatu", "MACAULAY CULKIN - Ladilla Rusa", "A la sombra de la sierra - La Raíz", "El Muerto Vivo - Peret", "JA DORMIRÉ - La Fúmiga", "Ayer Soñe - Benito Kamelas", "Agradecido - Rosendo"] },
+            { id: 8, name: "GILICUMPLE 8", songs: ["Baile De Los Pobres - Calle 13", "Wonderwall - Oasis", "Achilipu - Las Grecas", "Los Coches Chocones - Los Desgraciaus", "El aire de la calle - Los Delinqüentes", "La Bolsa - Bersuit Vergarabat", "Valencianotalibans - Auxili", "Como Cabras - TéCanela", "Ave María - David Bisbal"] },
+            { id: 9, name: "GILICUMPLE 9", songs: ["Ella Baila Sola - Eslabon Armado", "malibU - rusowsky", "Wannabe - Spice Girls", "La Vida Es Un Carnaval - Celia Cruz", "Orgullo Banderillero - SFDK", "Un Beso Y Una Flor - Nino Bravo", "Mucha Policía, Poca Diversión - Eskorbuto", "Como Yo Te Amo - Rocío Jurado", "Camins - Obrint Pas"] },
+            { id: 10, name: "GILICUMPLE 10", songs: ["A la sombra de la sierra - La Raíz", "Para No Verte Más - La Mosca", "MACAULAY CULKIN - Ladilla Rusa", "La Vida Es Un Carnaval - Celia Cruz", "MUSSEGU - Figa Flawas", "Vicio - Reincidentes", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Don't Stop Me Now - Queen", "Bella ciao - Talco"] },
+            { id: 11, name: "GILICUMPLE 11", songs: ["A Message to You Rudy - The Specials", "El Muerto Vivo - Peret", "Rosas - La Oreja de Van Gogh", "Torero - Chayanne", "La conejita de Papa Noel - Leticia Sabater", "El Marginal - Sara Hebe", "Agradecido - Rosendo", "Balansiya - Xavi Sarrià", "Una Lluna a L'Aigua - Txarango"] },
+            { id: 12, name: "GILICUMPLE 12", songs: ["Everybody - Backstreet Boys", "Como Yo Te Amo - Rocío Jurado", "Chiquilla - Seguridad Social", "Balansiya - Xavi Sarrià", "Valencianotalibans - Auxili", "Fruta Fresca - Carlos Vives", "Dile - Don Omar", "La Bolsa - Bersuit Vergarabat", "MUSSEGU - Figa Flawas"] },
+            { id: 13, name: "GILICUMPLE 13", songs: ["Vampire - Iseo & Dodosound", "Volcans - Buhos", "MACAULAY CULKIN - Ladilla Rusa", "Torero - Chayanne", "Achilipu - Las Grecas", "Atrévete-Te-Te - Calle 13", "Ave María - David Bisbal", "Baile De Los Pobres - Calle 13", "El Venao - Los Cantantes"] },
+            { id: 14, name: "GILICUMPLE 14", songs: ["MUSSEGU - Figa Flawas", "A la sombra de la sierra - La Raíz", "El Muerto Vivo - Peret", "El Venao - Los Cantantes", "Mucha Policía, Poca Diversión - Eskorbuto", "Ella Baila Sola - Eslabon Armado", "Rosas - La Oreja de Van Gogh", "La Canción Del Velero - La Fiesta", "A Message to You Rudy - The Specials"] },
+            { id: 15, name: "GILICUMPLE 15", songs: ["Wannabe - Spice Girls", "La mandanga - El Fary", "Mis Calzones - El Último Ke Zierre", "Wonderwall - Oasis", "Aborronà - Malifeta", "Un Beso Y Una Flor - Nino Bravo", "Los Coches Chocones - Los Desgraciaus", "JA DORMIRÉ - La Fúmiga", "Balansiya - Xavi Sarrià"] },
+            { id: 16, name: "GILICUMPLE 16", songs: ["MUSSEGU - Figa Flawas", "MACAULAY CULKIN - Ladilla Rusa", "Como Yo Te Amo - Rocío Jurado", "Valencianotalibans - Auxili", "Baile De Los Pobres - Calle 13", "Como Cabras - TéCanela", "La Vida Es Un Carnaval - Celia Cruz", "Ella Baila Sola - Eslabon Armado", "Ave María - David Bisbal"] },
+            { id: 17, name: "GILICUMPLE 17", songs: ["Fruta Fresca - Carlos Vives", "Mierda de Ciudad - Kortatu", "Mucha Policía, Poca Diversión - Eskorbuto", "Baile De Los Pobres - Calle 13", "Una Lluna a L'Aigua - Txarango", "So payaso - Extremoduro", "La conejita de Papa Noel - Leticia Sabater", "Valencianotalibans - Auxili", "Niño Soldado - Ska-P"] },
+            { id: 18, name: "GILICUMPLE 18", songs: ["Un Beso Y Una Flor - Nino Bravo", "Los Perros - Arde Bogotá", "Balansiya - Xavi Sarrià", "Aborronà - Malifeta", "Song 2 - Blur", "JA DORMIRÉ - La Fúmiga", "La mandanga - El Fary", "HUMBLE. - Kendrick Lamar", "Torero - Chayanne"] },
+            { id: 19, name: "GILICUMPLE 19", songs: ["La mano de Dios - Rodrigo", "Mucha Policía, Poca Diversión - Eskorbuto", "Ave María - David Bisbal", "Los Coches Chocones - Los Desgraciaus", "Crîtto de lâ Nabahâ - Califato ¾", "Don't Stop Me Now - Queen", "Ella Baila Sola - Eslabon Armado", "Como Cabras - TéCanela", "Wannabe - Spice Girls"] },
+            { id: 20, name: "GILICUMPLE 20", songs: ["MACAULAY CULKIN - Ladilla Rusa", "Los Perros - Arde Bogotá", "La Canción Del Velero - La Fiesta", "El Marginal - Sara Hebe", "A la sombra de la sierra - La Raíz", "Dile - Don Omar", "Wannabe - Spice Girls", "Baile De Los Pobres - Calle 13", "Chiquilla - Seguridad Social"] },
+            { id: 21, name: "GILICUMPLE 21", songs: ["Hoy - Los De Marras", "Torero - Chayanne", "malibU - rusowsky", "Ayer Soñe - Benito Kamelas", "Achilipu - Las Grecas", "Fruta Fresca - Carlos Vives", "Atrévete-Te-Te - Calle 13", "Como Cabras - TéCanela", "Mocatriz - Ojete Calor"] },
+            { id: 22, name: "GILICUMPLE 22", songs: ["Agradecido - Rosendo", "Ave María - David Bisbal", "Vampire - Iseo & Dodosound", "Esbarzers - La Gossa Sorda", "Mierda de Ciudad - Kortatu", "Aborronà - Malifeta", "Como Yo Te Amo - Rocío Jurado", "Los Coches Chocones - Los Desgraciaus", "Yo Quiero Bailar - Sonia Y Selena"] },
+            { id: 23, name: "GILICUMPLE 23", songs: ["A Message to You Rudy - The Specials", "MOLTA TRALLA - Oques Grasses", "El Venao - Los Cantantes", "La Mujer de Verde - IZAL", "Niño Soldado - Ska-P", "JA DORMIRÉ - La Fúmiga", "Una Lluna a L'Aigua - Txarango", "Bella ciao - Talco", "MUSSEGU - Figa Flawas"] },
+            { id: 24, name: "GILICUMPLE 24", songs: ["La Bolsa - Bersuit Vergarabat", "Achilipu - Las Grecas", "Song 2 - Blur", "Don't Stop Me Now - Queen", "El Marginal - Sara Hebe", "Wannabe - Spice Girls", "Camela or die - Me Fritos and the Gimme Cheetos", "Noche De Sexo - Wisin & Yandel", "Los Perros - Arde Bogotá"] },
+            { id: 25, name: "GILICUMPLE 25", songs: ["El Marginal - Sara Hebe", "Orgullo Banderillero - SFDK", "Wannabe - Spice Girls", "A Message to You Rudy - The Specials", "Wonderwall - Oasis", "El aire de la calle - Los Delinqüentes", "Balansiya - Xavi Sarrià", "MUSSEGU - Figa Flawas", "Fruta Fresca - Carlos Vives"] },
+            { id: 26, name: "GILICUMPLE 26", songs: ["Mierda de Ciudad - Kortatu", "Mucha Policía, Poca Diversión - Eskorbuto", "La Vida Es Un Carnaval - Celia Cruz", "Everybody - Backstreet Boys", "Una Lluna a L'Aigua - Txarango", "Achilipu - Las Grecas", "El Venao - Los Cantantes", "Vicio - Reincidentes", "A la sombra de la sierra - La Raíz"] },
+            { id: 27, name: "GILICUMPLE 27", songs: ["Ella Baila Sola - Eslabon Armado", "Atrévete-Te-Te - Calle 13", "Como Yo Te Amo - Rocío Jurado", "HUMBLE. - Kendrick Lamar", "La Canción Del Velero - La Fiesta", "Un Beso Y Una Flor - Nino Bravo", "Gasolina - Daddy Yankee", "Mis Calzones - El Último Ke Zierre", "El Muerto Vivo - Peret"] },
+            { id: 28, name: "GILICUMPLE 28", songs: ["malibU - rusowsky", "Los Coches Chocones - Los Desgraciaus", "MOLTA TRALLA - Oques Grasses", "La mandanga - El Fary", "Vicio - Reincidentes", "A Message to You Rudy - The Specials", "Torero - Chayanne", "Don't Stop Me Now - Queen", "Mucha Policía, Poca Diversión - Eskorbuto"] },
+            { id: 29, name: "GILICUMPLE 29", songs: ["Achilipu - Las Grecas", "Crîtto de lâ Nabahâ - Califato ¾", "JA DORMIRÉ - La Fúmiga", "So payaso - Extremoduro", "Volcans - Buhos", "Los Coches Chocones - Los Desgraciaus", "El aire de la calle - Los Delinqüentes", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Como Yo Te Amo - Rocío Jurado"] },
+            { id: 30, name: "GILICUMPLE 30", songs: ["Mierda de Ciudad - Kortatu", "Ella Baila Sola - Eslabon Armada", "Los Perros - Arde Bogotá", "Una Lluna a L'Aigua - Txarango", "La Bolsa - Bersuit Vergarabat", "MUSSEGU - Figa Flawas", "Don't Stop Me Now - Queen", "La Vida Es Un Carnaval - Celia Cruz", "Un Beso Y Una Flor - Nino Bravo"] },
+            { id: 31, name: "GILICUMPLE 31", songs: ["malibU - rusowsky", "La mano de Dios - Rodrigo", "Balansiya - Xavi Sarrià", "Mocatriz - Ojete Calor", "Agradecido - Rosendo", "La conejita de Papa Noel - Leticia Sabater", "Amigos para Siempre - Los Manolos", "Orgullo Banderillero - SFDK", "Niño Soldado - Ska-P"] },
+            { id: 32, name: "GILICUMPLE 32", songs: ["JA DORMIRÉ - La Fúmiga", "El Marginal - Sara Hebe", "Zorra - Bad Gyal", "Fruta Fresca - Carlos Vives", "Como Yo Te Amo - Rocío Jurado", "A Message to You Rudy - The Specials", "La Canción Del Velero - La Fiesta", "Dile - Don Omar", "Ave María - David Bisbal"] },
+            { id: 33, name: "GILICUMPLE 33", songs: ["A la sombra de la sierra - La Raíz", "Volcans - Buhos", "Don't Stop Me Now - Queen", "Everybody - Backstreet Boys", "MUSSEGU - Figa Flawas", "Atrévete-Te-Te - Calle 13", "El Muerto Vivo - Peret", "Wannabe - Spice Girls", "So payaso - Extremoduro"] },
+            { id: 34, name: "GILICUMPLE 34", songs: ["Los Coches Chocones - Los Desgraciaus", "HUMBLE. - Kendrick Lamar", "El Venao - Los Cantantes", "Para No Verte Más - La Mosca", "La Bolsa - Bersuit Vergarabat", "Torero - Chayanne", "Mocatriz - Ojete Calor", "Wonderwall - Oasis", "Hoy - Los De Marras"] },
+            { id: 35, name: "GILICUMPLE 35", songs: ["Como Cabras - TéCanela", "Achilipu - Las Grecas", "Wannabe - Spice Girls", "Ave María - David Bisbal", "Camela or die - Me Fritos and the Gimme Cheetos", "Vicio - Reincidentes", "La mano de Dios - Rodrigo", "Gasolina - Daddy Yankee", "Rosas - La Oreja de Van Gogh"] },
+            { id: 36, name: "GILICUMPLE 36", songs: ["El Marginal - Sara Hebe", "Valencianotalibans - Auxili", "A la sombra de la sierra - La Raíz", "Ella Baila Sola - Eslabon Armado", "malibU - rusowsky", "Como Yo Te Amo - Rocío Jurado", "Los Perros - Arde Bogotá", "Amigos para Siempre - Los Manolos", "El aire de la calle - Los Delinqüentes"] },
+            { id: 37, name: "GILICUMPLE 37", songs: ["Orgullo Banderillero - SFDK", "La Canción Del Velero - La Fiesta", "Balansiya - Xavi Sarrià", "So payaso - Extremoduro", "La Vida Es Un Carnaval - Celia Cruz", "Aborronà - Malifeta", "Bella ciao - Talco", "El Muerto Vivo - Peret", "Everybody - Backstreet Boys"] },
+            { id: 38, name: "GILICUMPLE 38", songs: ["Como Yo Te Amo - Rocío Jurado", "JA DORMIRÉ - La Fúmiga", "Mierda de Ciudad - Kortatu", "Mucha Policía, Poca Diversión - Eskorbuto", "Un Beso Y Una Flor - Nino Bravo", "El Perro Verde - Marea", "Los Coches Chocones - Los Desgraciaus", "A Message to You Rudy - The Specials", "MUSSEGU - Figa Flawas"] },
+            { id: 39, name: "GILICUMPLE 39", songs: ["Agradecido - Rosendo", "HUMBLE. - Kendrick Lamar", "Gasolina - Daddy Yankee", "Bella ciao - Talco", "Rosas - La Oreja de Van Gogh", "Dile - Don Omar", "malibU - rusowsky", "Niño Soldado - Ska-P", "Crîtto de lâ Nabahâ - Califato ¾"] },
+            { id: 40, name: "GILICUMPLE 40", songs: ["La conejita de Papa Noel - Leticia Sabater", "Fruta Fresca - Carlos Vives", "Para No Verte Más - La Mosca", "Niño Soldado - Ska-P", "La Canción Del Velero - La Fiesta", "Agradecido - Rosendo", "Una Lluna a L'Aigua - Txarango", "Los Coches Chocones - Los Desgraciaus", "Everybody - Backstreet Boys"] },
+            { id: 41, name: "GILICUMPLE 41", songs: ["malibU - rusowsky", "Torero - Chayanne", "La mano de Dios - Rodrigo", "Orgullo Banderillero - SFDK", "MACAULAY CULKIN - Ladilla Rusa", "Mocatriz - Ojete Calor", "JA DORMIRÉ - La Fúmiga", "Baile De Los Pobres - Calle 13", "Camins - Obrint Pas"] },
+            { id: 42, name: "GILICUMPLE 42", songs: ["MUSSEGU - Figa Flawas", "Valencianotalibans - Auxili", "La Bolsa - Bersuit Vergarabat", "La mandanga - El Fary", "Bella ciao - Talco", "El Marginal - Sara Hebe", "Zorra - Bad Gyal", "Vicio - Reincidentes", "A Message to You Rudy - The Specials"] },
+            { id: 43, name: "GILICUMPLE 43", songs: ["Achilipu - Las Grecas", "El Muerto Vivo - Peret", "Song 2 - Blur", "Everybody - Backstreet Boys", "MOLTA TRALLA - Oques Grasses", "A la sombra de la sierra - La Raíz", "La Canción Del Velero - La Fiesta", "Como Yo Te Amo - Rocío Jurado", "Atrévete-Te-Te - Calle 13"] },
+            { id: 44, name: "GILICUMPLE 44", songs: ["Wonderwall - Oasis", "Baile De Los Pobres - Calle 13", "Orgullo Banderillero - SFDK", "Ella Baila Sola - Eslabon Armado", "Los Perros - Arde Bogotá", "Como Cabras - TéCanela", "Aborronà - Malifeta", "Noche De Sexo - Wisin & Yandel", "El Venao - Los Cantantes"] },
+            { id: 45, name: "GILICUMPLE 45", songs: ["Un Beso Y Una Flor - Nino Bravo", "Una Lluna a L'Aigua - Txarango", "Vampire - Iseo & Dodosound", "Niño Soldado - Ska-P", "La conejita de Papa Noel - Leticia Sabater", "Valencianotalibans - Auxili", "El Perro Verde - Marea", "Como Yo Te Amo - Rocío Jurado", "La Vida Es Un Carnaval - Celia Cruz"] },
+            { id: 46, name: "GILICUMPLE 46", songs: ["A la sombra de la sierra - La Raíz", "Wannabe - Spice Girls", "Hoy - Los De Marras", "El aire de la calle - Los Delinqüentes", "Rosas - La Oreja de Van Gogh", "Everybody - Backstreet Boys", "La Bolsa - Bersuit Vergarabat", "Fruta Fresca - Carlos Vives", "Como Cabras - TéCanela"] },
+            { id: 47, name: "GILICUMPLE 47", songs: ["La mandanga - El Fary", "La Vida Es Un Carnaval - Celia Cruz", "MACAULAY CULKIN - Ladilla Rusa", "malibU - rusowsky", "Aborronà - Malifeta", "El Marginal - Sara Hebe", "Mis Calzones - El Último Ke Zierre", "MUSSEGU - Figa Flawas", "Don't Stop Me Now - Queen"] },
+            { id: 48, name: "GILICUMPLE 48", songs: ["Dile - Don Omar", "Como Cabras - TéCanela", "Mierda de Ciudad - Kortatu", "La Canción Del Velero - La Fiesta", "JA DORMIRÉ - La Fúmiga", "El Perro Verde - Marea", "Song 2 - Blur", "Ave María - David Bisbal", "Baile De Los Pobres - Calle 13"] },
+            { id: 49, name: "GILICUMPLE 49", songs: ["A Message to You Rudy - The Specials", "Yo Quiero Bailar - Sonia Y Selena", "Balansiya - Xavi Sarrià", "Los Perros - Arde Bogotá", "Atrévete-Te-Te - Calle 13", "Para No Verte Más - La Mosca", "Gasolina - Daddy Yankee", "Un Beso Y Una Flor - Nino Bravo", "El Venao - Los Cantantes"] },
+            { id: 50, name: "GILICUMPLE 50", songs: ["Bella ciao - Talco", "El Muerto Vivo - Peret", "Niño Soldado - Ska-P", "La Bolsa - Bersuit Vergarabat", "Wonderwall - Oasis", "Mucha Policía, Poca Diversión - Eskorbuto", "Crîtto de lâ Nabahâ - Califato ¾", "Como Yo Te Amo - Rocío Jurado", "Chiquilla - Seguridad Social"] },
+            { id: 51, name: "GILICUMPLE 51", songs: ["Los Perros - Arde Bogotá", "Ella Baila Sola - Eslabon Armado", "HUMBLE. - Kendrick Lamar", "Noche De Sexo - Wisin & Yandel", "Fruta Fresca - Carlos Vives", "Como Yo Te Amo - Rocío Jurado", "A Message to You Rudy - The Specials", "Aborronà - Malifeta", "So payaso - Extremoduro"] },
+            { id: 52, name: "GILICUMPLE 52", songs: ["JA DORMIRÉ - La Fúmiga", "Un Beso Y Una Flor - Nino Bravo", "Amigos para Siempre - Los Manolos", "Dile - Don Omar", "Orgullo Banderillero - SFDK", "Como Cabras - TéCanela", "La Vida Es Un Carnaval - Celia Cruz", "A la sombra de la sierra - La Raíz", "MUSSEGU - Figa Flawas"] },
+            { id: 53, name: "GILICUMPLE 53", songs: ["Valencianotalibans - Auxili", "La Bolsa - Bersuit Vergarabat", "Baile De Los Pobres - Calle 13", "Bella ciao - Talco", "La conejita de Papa Noel - Leticia Sabater", "Ella Baila Sola - Eslabon Armado", "MACAULAY CULKIN - Ladilla Rusa", "Song 2 - Blur", "Rosas - La Oreja de Van Gogh"] },
+            { id: 54, name: "GILICUMPLE 54", songs: ["Achilipu - Las Grecas", "Vicio - Reincidentes", "Mierda de Ciudad - Kortatu", "La mandanga - El Fary", "Crîtto de lâ Nabahâ - Califato ¾", "Wannabe - Spice Girls", "Hoy - Los De Marras", "El Muerto Vivo - Peret", "MUSSEGU - Figa Flawas"] },
+            { id: 55, name: "GILICUMPLE 55", songs: ["Agradecido - Rosendo", "MOLTA TRALLA - Oques Grasses", "Everybody - Backstreet Boys", "Torero - Chayanne", "Mucha Policía, Poca Diversión - Eskorbuto", "El aire de la calle - Los Delinqüentes", "Para No Verte Más - La Mosca", "Orgullo Banderillero - SFDK", "Ayer Soñe - Benito Kamelas"] },
+            { id: 56, name: "GILICUMPLE 56", songs: ["A Message to You Rudy - The Specials", "Vampire - Iseo & Dodosound", "El Marginal - Sara Hebe", "Los Coches Chocones - Los Desgraciaus", "Torero - Chayanne", "JA DORMIRÉ - La Fúmiga", "Fruta Fresca - Carlos Vives", "El Muerto Vivo - Peret", "Noche De Sexo - Wisin & Yandel"] },
+            { id: 57, name: "GILICUMPLE 57", songs: ["Ayer Soñe - Benito Kamelas", "Un Beso Y Una Flor - Nino Bravo", "Valencianotalibans - Auxili", "Los Coches Chocones - Los Desgraciaus", "La mano de Dios - Rodrigo", "Chiquilla - Seguridad Social", "Noche De Sexo - Wisin & Yandel", "Everybody - Backstreet Boys", "La Canción Del Velero - La Fiesta"] },
+            { id: 58, name: "GILICUMPLE 58", songs: ["A Message to You Rudy - The Specials", "Mocatriz - Ojete Calor", "El Perro Verde - Marea", "Achilipu - Las Grecas", "Balansiya - Xavi Sarrià", "Para No Verte Más - La Mosca", "Don't Stop Me Now - Queen", "Como Cabras - TéCanela", "La Bolsa - Bersuit Vergarabat"] },
+            { id: 59, name: "GILICUMPLE 59", songs: ["Achilipu - Las Grecas", "JA DORMIRÉ - La Fúmiga", "MACAULAY CULKIN - Ladilla Rusa", "Baile De Los Pobres - Calle 13", "El aire de la calle - Los Delinqüentes", "Crîtto de lâ Nabahâ - Califato ¾", "Gasolina - Daddy Yankee", "Hoy - Los De Marras", "Como Yo Te Amo - Rocío Jurado"] },
+            { id: 60, name: "GILICUMPLE 60", songs: ["Agradecido - Rosendo", "La mandanga - El Fary", "MUSSEGU - Figa Flawas", "Wannabe - Spice Girls", "La conejita de Papa Noel - Leticia Sabater", "Ella Baila Sola - Eslabon Armado", "El Venao - Los Cantantes", "Niño Soldado - Ska-P", "Bella ciao - Talco"] },
+            { id: 61, name: "GILICUMPLE 61", songs: ["El Muerto Vivo - Peret", "A la sombra de la sierra - La Raíz", "Vicio - Reincidentes", "MACAULAY CULKIN - Ladilla Rusa", "Baile De Los Pobres - Calle 13", "Los Perros - Arde Bogotá", "Atrévete-Te-Te - Calle 13", "Orgullo Banderillero - SFDK", "Mucha Policía, Poca Diversión - Eskorbuto"] },
+            { id: 62, name: "GILICUMPLE 62", songs: ["Los Coches Chocones - Los Desgraciaus", "Torero - Chayanne", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Aborronà - Malifeta", "El Venao - Los Cantantes", "Ayer Soñe - Benito Kamelas", "Crîtto de lâ Nabahâ - Califato ¾", "Orgullo Banderillero - SFDK", "El Marginal - Sara Hebe"] },
+            { id: 63, name: "GILICUMPLE 63", songs: ["Valencianotalibans - Auxili", "MACAULAY CULKIN - Ladilla Rusa", "La Vida Es Un Carnaval - Celia Cruz", "Dile - Don Omar", "Fruta Fresca - Carlos Vives", "Balansiya - Xavi Sarrià", "La mandanga - El Fary", "Ella Baila Sola - Eslabon Armado", "Los Perros - Arde Bogotá"] },
+            { id: 64, name: "GILICUMPLE 64", songs: ["Don't Stop Me Now - Queen", "Bella ciao - Talco", "Atrévete-Te-Te - Calle 13", "Crîtto de lâ Nabahâ - Califato ¾", "MUSSEGU - Figa Flawas", "Baile De Los Pobres - Calle 13", "La Canción Del Velero - La Fiesta", "Como Yo Te Amo - Rocío Jurado", "Una Lluna a L'Aigua - Txarango"] },
+            { id: 65, name: "GILICUMPLE 65", songs: ["La Bolsa - Bersuit Vergarabat", "Mis Calzones - El Último Ke Zierre", "Fruta Fresca - Carlos Vives", "La conejita de Papa Noel - Leticia Sabater", "Everybody - Backstreet Boys", "Chiquilla - Seguridad Social", "Un Beso Y Una Flor - Nino Bravo", "El Muerto Vivo - Peret", "Rosas - La Oreja de Van Gogh"] },
+            { id: 66, name: "GILICUMPLE 66", songs: ["So payaso - Extremoduro", "Agradecido - Rosendo", "Baile De Los Pobres - Calle 13", "Niño Soldado - Ska-P", "A Message to You Rudy - The Specials", "malibU - rusowsky", "El Perro Verde - Marea", "JA DORMIRÉ - La Fúmiga", "Ave María - David Bisbal"] },
+            { id: 67, name: "GILICUMPLE 67", songs: ["Como Cabras - TéCanela", "Aborronà - Malifeta", "Wonderwall - Oasis", "Yo Quiero Bailar - Sonia Y Selena", "La mano de Dios - Rodrigo", "HUMBLE. - Kendrick Lamar", "Noche De Sexo - Wisin & Yandel", "El Venao - Los Cantantes", "Achilipu - Las Grecas"] },
+            { id: 68, name: "GILICUMPLE 68", songs: ["Crîtto de lâ Nabahâ - Califato ¾", "Noche De Sexo - Wisin & Yandel", "Fruta Fresca - Carlos Vives", "Atrévete-Te-Te - Calle 13", "Mocatriz - Ojete Calor", "El Venao - Los Cantantes", "JA DORMIRÉ - La Fúmiga", "Vampire - Iseo & Dodosound", "Balansiya - Xavi Sarrià"] },
+            { id: 69, name: "GILICUMPLE 69", songs: ["Amigos para Siempre - Los Manolos", "Wonderwall - Oasis", "Ayer Soñe - Benito Kamelas", "La Vida Es Un Carnaval - Celia Cruz", "Achilipu - Las Grecas", "Balansiya - Xavi Sarrià", "Gasolina - Daddy Yankee", "Vicio - Reincidentes", "La Bolsa - Bersuit Vergarabat"] },
+            { id: 70, name: "GILICUMPLE 70", songs: ["Mis Calzones - El Último Ke Zierre", "Ella Baila Sola - Eslabon Armado", "El Marginal - Sara Hebe", "Como Yo Te Amo - Rocío Jurado", "MUSSEGU - Figa Flawas", "Para No Verte Más - La Mosca", "La mandanga - El Fary", "Mierda de Ciudad - Kortatu", "malibU - rusowsky"] },
+            { id: 71, name: "GILICUMPLE 71", songs: ["MACAULAY CULKIN - Ladilla Rusa", "Los Coches Chocones - Los Desgraciaus", "JA DORMIRÉ - La Fúmiga", "Don't Stop Me Now - Queen", "A la sombra de la sierra - La Raíz", "Un Beso Y Una Flor - Nino Bravo", "Achilipu - Las Grecas", "Yo Quiero Bailar - Sonia Y Selena", "Como Cabras - TéCanela"] },
+            { id: 72, name: "GILICUMPLE 72", songs: ["Noche De Sexo - Wisin & Yandel", "Vicio - Reincidentes", "Ave María - David Bisbal", "La conejita de Papa Noel - Leticia Sabater", "Fruta Fresca - Carlos Vives", "Orgullo Banderillero - SFDK", "Mucha Policía, Poca Diversión - Eskorbuto", "El aire de la calle - Los Delinqüentes", "La Bolsa - Bersuit Vergarabat"] },
+            { id: 73, name: "GILICUMPLE 73", songs: ["Wonderwall - Oasis", "El Marginal - Sara Hebe", "La mandanga - El Fary", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Valencianotalibans - Auxili", "Orgullo Banderillero - SFDK", "Un Beso Y Una Flor - Nino Bravo", "Hoy - Los De Marras", "Rosas - La Oreja de Van Gogh"] },
+            { id: 74, name: "GILICUMPLE 74", songs: ["Torero - Chayanne", "El Muerto Vivo - Peret", "La Canción Del Velero - La Fiesta", "Achilipu - Las Grecas", "A la sombra de la sierra - La Raíz", "malibU - rusowsky", "Mucha Policía, Poca Diversión - Eskorbuto", "Amigos para Siempre - Los Manolos", "Ave María - David Bisbal"] },
+            { id: 75, name: "GILICUMPLE 75", songs: ["MUSSEGU - Figa Flawas", "Los Coches Chocones - Los Desgraciaus", "Como Cabras - TéCanela", "La Bolsa - Bersuit Vergarabat", "Ayer Soñe - Benito Kamelas", "Bella ciao - Talco", "Noche De Sexo - Wisin & Yandel", "Vicio - Reincidentes", "El Marginal - Sara Hebe"] },
+            { id: 76, name: "GILICUMPLE 76", songs: ["A Message to You Rudy - The Specials", "Wonderwall - Oasis", "La Vida Es Un Carnaval - Celia Cruz", "La mandanga - El Fary", "Ella Baila Sola - Eslabon Armado", "MACAULAY CULKIN - Ladilla Rusa", "So payaso - Extremoduro", "Niño Soldado - Ska-P", "Don't Stop Me Now - Queen"] },
+            { id: 77, name: "GILICUMPLE 77", songs: ["Balansiya - Xavi Sarrià", "Chiquilla - Seguridad Social", "Aborronà - Malifeta", "Mis Calzones - El Último Ke Zierre", "Orgullo Banderillero - SFDK", "HUMBLE. - Kendrick Lamar", "Fruta Fresca - Carlos Vives", "Agradecido - Rosendo", "Everybody - Backstreet Boys"] },
+            { id: 78, name: "GILICUMPLE 78", songs: ["El Marginal - Sara Hebe", "A la sombra de la sierra - La Raíz", "JA DORMIRÉ - La Fúmiga", "Mierda de Ciudad - Kortatu", "Gasolina - Daddy Yankee", "Yo Quiero Bailar - Sonia Y Selena", "Los Perros - Arde Bogotá", "El Venao - Los Cantantes", "La conejita de Papa Noel - Leticia Sabater"] },
+            { id: 79, name: "GILICUMPLE 79", songs: ["MACAULAY CULKIN - Ladilla Rusa", "Aborronà - Malifeta", "Fruta Fresca - Carlos Vives", "Balansiya - Xavi Sarrià", "Como Yo Te Amo - Rocío Jurado", "Un Beso Y Una Flor - Nino Bravo", "Mucha Policía, Poca Diversión - Eskorbuto", "El Muerto Vivo - Peret", "Camela or die - Me Fritos and the Gimme Cheetos"] },
+            { id: 80, name: "GILICUMPLE 80", songs: ["El Marginal - Sara Hebe", "MUSSEGU - Figa Flawas", "Wonderwall - Oasis", "El aire de la calle - Los Delinqüentes", "Gasolina - Daddy Yankee", "Ella Baila Sola - Eslabon Armado", "Mocatriz - Ojete Calor", "Torero - Chayanne", "A la sombra de la sierra - La Raíz"] },
+            { id: 81, name: "GILICUMPLE 81", songs: ["Agradecido - Rosendo", "Noche De Sexo - Wisin & Yandel", "La mandanga - El Fary", "Bella ciao - Talco", "El Perro Verde - Marea", "JA DORMIRÉ - La Fúmiga", "Baile De Los Pobres - Calle 13", "Para No Verte Más - La Mosca", "Valencianotalibans - Auxili"] },
+            { id: 82, name: "GILICUMPLE 82", songs: ["MACAULAY CULKIN - Ladilla Rusa", "Ella Baila Sola - Eslabon Armado", "Crîtto de lâ Nabahâ - Califato ¾", "Como Cabras - TéCanela", "Una Lluna a L'Aigua - Txarango", "Vampire - Iseo & Dodosound", "Orgullo Banderillero - SFDK", "Everybody - Backstreet Boys", "Atrévete-Te-Te - Calle 13"] },
+            { id: 83, name: "GILICUMPLE 83", songs: ["Mucha Policía, Poca Diversión - Eskorbuto", "Volcans - Buhos", "Mierda de Ciudad - Kortatu", "Los Coches Chocones - Los Desgraciaus", "Balansiya - Xavi Sarrià", "A Message to You Rudy - The Specials", "Yo Quiero Bailar - Sonia Y Selena", "La Bolsa - Bersuit Vergarabat", "Fruta Fresca - Carlos Vives"] },
+            { id: 84, name: "GILICUMPLE 84", songs: ["El Venao - Los Cantantes", "El Muerto Vivo - Peret", "Zorra - Bad Gyal", "Mierda de Ciudad - Kortatu", "Amigos para Siempre - Los Manolos", "Como Yo Te Amo - Rocío Jurado", "La Bolsa - Bersuit Vergarabat", "Atrévete-Te-Te - Calle 13", "Hoy - Los De Marras"] },
+            { id: 85, name: "GILICUMPLE 85", songs: ["Vicio - Reincidentes", "MUSSEGU - Figa Flawas", "Everybody - Backstreet Boys", "Balansiya - Xavi Sarrià", "So payaso - Extremoduro", "El Muerto Vivo - Peret", "Mucha Policía, Poca Diversión - Eskorbuto", "Ella Baila Sola - Eslabon Armado", "La Canción Del Velero - La Fiesta"] },
+            { id: 86, name: "GILICUMPLE 86", songs: ["Baile De Los Pobres - Calle 13", "Fruta Fresca - Carlos Vives", "Achilipu - Las Grecas", "A la sombra de la sierra - La Raíz", "MUSSEGU - Figa Flawas", "Orgullo Banderillero - SFDK", "Mis Calzones - El Último Ke Zierre", "Zorra - Bad Gyal", "Torero - Chayanne"] },
+            { id: 87, name: "GILICUMPLE 87", songs: ["Aborronà - Malifeta", "Como Cabras - TéCanela", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Valencianotalibans - Auxili", "Un Beso Y Una Flor - Nino Bravo", "Song 2 - Blur", "Don't Stop Me Now - Queen", "La conejita de Papa Noel - Leticia Sabater", "La Vida Es Un Carnaval - Celia Cruz"] },
+            { id: 88, name: "GILICUMPLE 88", songs: ["malibU - rusowsky", "El Muerto Vivo - Peret", "Rosas - La Oreja de Van Gogh", "Dile - Don Omar", "Wonderwall - Oasis", "El Marginal - Sara Hebe", "A Message to You Rudy - The Specials", "Niño Soldado - Ska-P", "Gasolina - Daddy Yankee"] },
+            { id: 89, name: "GILICUMPLE 89", songs: ["Los Coches Chocones - Los Desgraciaus", "Achilipu - Las Grecas", "El aire de la calle - Los Delinqüentes", "Bella ciao - Talco", "JA DORMIRÉ - La Fúmiga", "Yo Quiero Bailar - Sonia Y Selena", "Un Beso Y Una Flor - Nino Bravo", "La Canción Del Velero - La Fiesta", "Vampire - Iseo & Dodosound"] },
+            { id: 90, name: "GILICUMPLE 90", songs: ["Ella Baila Sola - Eslabon Armado", "El aire de la calle - Los Delinqüentes", "Don't Stop Me Now - Queen", "Mucha Policía, Poca Diversión - Eskorbuto", "Crîtto de lâ Nabahâ - Califato ¾", "Para No Verte Más - La Mosca", "Achilipu - Las Grecas", "Wonderwall - Oasis", "Los Coches Chocones - Los Desgraciaus"] },
+            { id: 91, name: "GILICUMPLE 91", songs: ["MUSSEGU - Figa Flawas", "Héroes Del Sábado - La Maravillosa Orquesta del Alcohol", "Fruta Fresca - Carlos Vives", "Wonderwall - Oasis", "Niño Soldado - Ska-P", "malibU - rusowsky", "La Bolsa - Bersuit Vergarabat", "Achilipu - Las Grecas", "Yo Quiero Bailar - Sonia Y Selena"] },
+            { id: 92, name: "GILICUMPLE 92", songs: ["El Marginal - Sara Hebe", "Como Yo Te Amo - Rocío Jurado", "Hoy - Los De Marras", "Mocatriz - Ojete Calor", "La mandanga - El Fary", "Amigos para Siempre - Los Manolos", "Mis Calzones - El Último Ke Zierre", "Una Lluna a L'Aigua - Txarango", "Everybody - Backstreet Boys"] },
+            { id: 93, name: "GILICUMPLE 93", songs: ["Los Perros - Arde Bogotá", "Agradecido - Rosendo", "MACAULAY CULKIN - Ladilla Rusa", "Rosas - La Oreja de Van Gogh", "Atrévete-Te-Te - Calle 13", "El Perro Verde - Marea", "Chiquilla - Seguridad Social", "El Venao - Los Cantantes", "Crîtto de lâ Nabahâ - Califato ¾"] },
+            { id: 94, name: "GILICUMPLE 94", songs: ["Crîtto de lâ Nabahâ - Califato ¾", "El Muerto Vivo - Peret", "Aborronà - Malifeta", "MUSSEGU - Figa Flawas", "El aire de la calle - Los Delinqüentes", "La Canción Del Velero - La Fiesta", "Hoy - Los De Marras", "Gasolina - Daddy Yankee", "A Message to You Rudy - The Specials"] },
+            { id: 95, name: "GILICUMPLE 95", songs: ["Los Coches Chocones - Los Desgraciaus", "Mierda de Ciudad - Kortatu", "El Muerto Vivo - Peret", "Everybody - Backstreet Boys", "La mandanga - El Fary", "Balansiya - Xavi Sarrià", "Atrévete-Te-Te - Calle 13", "Achilipu - Las Grecas", "El aire de la calle - Los Delinqüentes"] },
+            { id: 96, name: "GILICUMPLE 96", songs: ["El Marginal - Sara Hebe", "JA DORMIRÉ - La Fúmiga", "Vicio - Reincidentes", "Como Yo Te Amo - Rocío Jurado", "Ella Baila Sola - Eslabon Armado", "La Vida Es Un Carnaval - Celia Cruz", "La mandanga - El Fary", "Balansiya - Xavi Sarrià", "Mis Calzones - El Último Ke Zierre"] },
+            { id: 97, name: "GILICUMPLE 97", songs: ["malibU - rusowsky", "Orgullo Banderillero - SFDK", "Como Cabras - TéCanela", "Ave María - David Bisbal", "Baile De Los Pobres - Calle 13", "La conejita de Papa Noel - Leticia Sabater", "Fruta Fresca - Carlos Vives", "Niño Soldado - Ska-P", "Wonderwall - Oasis"] },
+            { id: 98, name: "GILICUMPLE 98", songs: ["A la sombra de la sierra - La Raíz", "La mano de Dios - Rodrigo", "Un Beso Y Una Flor - Nino Bravo", "El Venao - Los Cantantes", "Noche De Sexo - Wisin & Yandel", "MACAULAY CULKIN - Ladilla Rusa", "Torero - Chayanne", "Mucha Policía, Poca Diversión - Eskorbuto", "La Bolsa - Bersuit Vergarabat"] },
+            { id: 99, name: "GILICUMPLE 99", songs: ["Zorra - Bad Gyal", "malibU - rusowsky", "La mandanga - El Fary", "Mucha Policía, Poca Diversión - Eskorbuto", "Rosas - La Oreja de Van Gogh", "A la sombra de la sierra - La Raíz", "Valencianotalibans - Auxili", "A Message to You Rudy - The Specials", "Niño Soldado - Ska-P"] },
+            { id: 100, name: "GILICUMPLE 100", songs: ["Crîtto de lâ Nabahâ - Califato ¾", "Como Cabras - TéCanela", "Amigos para Siempre - Los Manolos", "malibU - rusowsky", "Everybody - Backstreet Boys", "La Canción Del Velero - La Fiesta", "Valencianotalibans - Auxili", "Ella Baila Sola - Eslabon Armado", "Mocatriz - Ojete Calor"] }
+        ];
+
+        // --- 2. LÓGICA DE CONTROL Y ESTADO PERSISTENTE ---
+
+        // Nuevo estado global para rastrear las canciones marcadas (persistente)
+        let markedSongs = new Set();
+        // Estado global para rastrear los cartones ganadores (recalculado al inicio)
+        let winnerState = {
+            lineWinners: new Set(),
+            bingoWinners: new Set()
+        };
+
+        // Función para generar un ID simple a partir del nombre de la canción
+        const sanitizeSongName = (song) => song.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+        /** Carga las canciones marcadas de localStorage al inicio. */
+        function loadMarkedSongs() {
+            try {
+                const storedSongs = localStorage.getItem('bingoMarkedSongs');
+                if (storedSongs) {
+                    // Cargar y convertir de Array (guardado) a Set (en memoria)
+                    markedSongs = new Set(JSON.parse(storedSongs));
+                }
+            } catch (e) {
+                console.error("Error al cargar las canciones guardadas de localStorage:", e);
+                markedSongs = new Set(); // Resetear si hay un error de parseo
+            }
+        }
+
+        /** Guarda las canciones marcadas en localStorage. */
+        function saveMarkedSongs() {
+            // Convertir Set (en memoria) a Array (guardado)
+            localStorage.setItem('bingoMarkedSongs', JSON.stringify(Array.from(markedSongs)));
+        }
+
+        // Función principal para dibujar los elementos de la página
+        function initializeBingo() {
+            // 1. Cargar estado persistente
+            loadMarkedSongs();
+
+            const uniqueSongs = new Set();
+            BINGO_CARDS_DATA.forEach(card => card.songs.forEach(song => uniqueSongs.add(song)));
+            const sortedUniqueSongs = Array.from(uniqueSongs).sort();
+
+            // 2. Dibujar UI (lista maestra y cartones)
+            drawMasterList(sortedUniqueSongs);
+            drawBingoCards();
+
+            // 3. Aplicar las marcas cargadas y verificar ganancias
+            applyInitialMarksAndCheckWins();
+
+            // 4. Inicializar/Actualizar el panel de ganadores
+            updateWinnerDisplay();
+        }
+
+        // Dibuja la lista maestra de canciones con checkboxes
+        function drawMasterList(songs) {
+            const listContainer = document.getElementById('song-list-container');
+            songs.forEach(song => {
+                const songID = sanitizeSongName(song);
+                const listItem = document.createElement('li');
+                
+                // Determinar el estado inicial del checkbox
+                const isMarked = markedSongs.has(songID);
+
+                // Añadir un listener al LI para marcar/desmarcar con un solo clic en toda la fila
+                listItem.onclick = function () {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    // Esta línea asegura que el estado del checkbox cambia antes de llamar a toggleSong
+                    checkbox.checked = !checkbox.checked;
+                    toggleSong(songID, checkbox.checked);
+                };
+
+                listItem.innerHTML = `
+                    <input type="checkbox" id="${songID}" data-song-id="${songID}" ${isMarked ? 'checked' : ''}>
+                    <span title="${song.replace(/"/g, '&quot;')}">${song}</span>
+                `;
+                listContainer.appendChild(listItem);
+            });
+        }
+
+        // Dibuja todos los cartones de bingo
+        function drawBingoCards() {
+            const cardsContainer = document.getElementById('tables-container');
+            BINGO_CARDS_DATA.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'bingo-card';
+                cardDiv.id = `card-${card.id}`;
+
+                let gridHTML = '<div class="bingo-grid">';
+                card.songs.forEach((song, index) => {
+                    const songID = sanitizeSongName(song);
+                    // IMPORTANTE: No marcamos la clase 'marked' aquí. Lo hace applyInitialMarksAndCheckWins.
+                    gridHTML += `<div class="bingo-cell" data-song-id="${songID}" data-pos="${index}">${song}</div>`;
+                });
+                gridHTML += '</div>';
+
+                // Añadimos las notificaciones
+                const notificationsHTML = `
+                    <div class="notification-container">
+                        <div id="line-${card.id}" class="notification line">🎉 ¡LÍNEA! 🎉</div>
+                        <div id="bingo-${card.id}" class="notification bingo">🏆 ¡BINGO! 🏆</div>
+                    </div>
+                `;
+
+                cardDiv.innerHTML = `<div class="bingo-header">${card.name}</div>${gridHTML}${notificationsHTML}`;
+                cardsContainer.appendChild(cardDiv);
+            });
+        }
+
+        /**
+         * Aplica las marcas cargadas desde localStorage a las celdas de los cartones y verifica ganancias.
+         * Se ejecuta solo al inicio.
+         */
+        function applyInitialMarksAndCheckWins() {
+            const affectedCards = new Set();
+
+            markedSongs.forEach(songID => {
+                const cells = document.querySelectorAll(`.bingo-cell[data-song-id="${songID}"]`);
+                cells.forEach(cell => {
+                    cell.classList.add('marked'); // Marcar la celda
+                    affectedCards.add(cell.closest('.bingo-card'));
+                });
+            });
+
+            // Comprobar ganancias en todos los cartones afectados
+            affectedCards.forEach(card => {
+                checkForWins(card);
+            });
+        }
+
+
+        // Función activada por el click en el LI para marcar la canción
+        function toggleSong(songID, isChecked) {
+            // 1. Sincronizar el estado persistente y guardarlo
+            if (isChecked) {
+                markedSongs.add(songID);
+            } else {
+                markedSongs.delete(songID);
+            }
+            saveMarkedSongs(); // Guardar el cambio inmediatamente
+
+            // 2. Sincronizar el checkbox maestro (Ya se hizo en el listener, pero lo mantenemos para seguridad)
+            const masterCheckbox = document.getElementById(songID);
+            if (masterCheckbox) {
+                masterCheckbox.checked = isChecked;
+            }
+
+            // 3. Marcar/Desmarcar todas las celdas con ese ID en todos los cartones
+            const cells = document.querySelectorAll(`.bingo-cell[data-song-id="${songID}"]`);
+            const affectedCards = new Set();
+
+            cells.forEach(cell => {
+                cell.classList.toggle('marked', isChecked);
+                affectedCards.add(cell.closest('.bingo-card'));
+            });
+
+            // 4. Comprobar Linea/Bingo para cada cartón afectado
+            affectedCards.forEach(card => {
+                checkForWins(card);
+            });
+        }
+
+        /**
+         * Comprueba si un cartón tiene Linea o Bingo y actualiza el estado global y visuales locales.
+         */
+        function checkForWins(cardElement) {
+            if (!cardElement) return;
+
+            const cells = Array.from(cardElement.querySelectorAll('.bingo-cell'));
+            // markedCells es un array de booleanos [true, false, true, ...]
+            const markedCells = cells.map(cell => cell.classList.contains('marked'));
+            const cardID = cardElement.id.split('-')[1];
+            const cardName = cardElement.querySelector('.bingo-header').textContent;
+
+            const lineNotification = document.getElementById(`line-${cardID}`);
+            const bingoNotification = document.getElementById(`bingo-${cardID}`);
+
+            // Reestablecer estados visuales y globales del cartón
+            cardElement.classList.remove('line-winner', 'bingo-winner');
+            lineNotification.style.display = 'none';
+            bingoNotification.style.display = 'none';
+            winnerState.lineWinners.delete(cardName);
+            winnerState.bingoWinners.delete(cardName);
+
+
+            // Indices: 0 1 2, 3 4 5, 6 7 8 (3x3 grid)
+            const winningCombinations = [
+                // Filas
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                // Columnas
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                // Diagonales
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            let hasLine = false;
+            let hasBingo = true; // Asumimos Bingo hasta encontrar una celda no marcada.
+
+            // 1. Comprobar Bingo (todas las celdas marcadas)
+            if (markedCells.some(isMarked => !isMarked)) {
+                hasBingo = false; 
+            }
+
+            // 2. Comprobar Línea (Solo si no hay Bingo, aunque se pueden tener ambos, la lógica es más limpia)
+            if (!hasBingo) { 
+                for (const combo of winningCombinations) {
+                    if (markedCells[combo[0]] && markedCells[combo[1]] && markedCells[combo[2]]) {
+                        hasLine = true;
+                        break;
+                    }
+                }
+            }
+
+
+            // 3. Actualizar Estado Global de Ganadores (winnerState) y Visuales del Cartón Local
+            if (hasBingo) {
+                winnerState.bingoWinners.add(cardName);
+                bingoNotification.style.display = 'block';
+                cardElement.classList.add('bingo-winner');
+            } else if (hasLine) {
+                winnerState.lineWinners.add(cardName);
+                lineNotification.style.display = 'block';
+                cardElement.classList.add('line-winner');
+            }
+            
+            // 4. Actualizar el panel de resumen de ganadores
+            updateWinnerDisplay();
+        }
+        
+        /**
+         * Dibuja la lista de ganadores de Línea y Bingo en el panel superior.
+         */
+        function updateWinnerDisplay() {
+            const displayContainer = document.getElementById('winner-display-container');
+
+            if (!displayContainer) return;
+
+            // Usamos Array.from(Set) para obtener una lista y .sort() para ordenarla alfabéticamente
+            const lineNames = Array.from(winnerState.lineWinners).sort();
+            const bingoNames = Array.from(winnerState.bingoWinners).sort();
+
+            let html = '<h2>ESTADO DE GANADORES</h2>';
+
+            if (lineNames.length === 0 && bingoNames.length === 0) {
+                html += '<p style="margin: 0; padding: 5px; font-style: italic; color: #ccc;">¡Aún no hay Líneas ni Bingos! Sigue marcando canciones.</p>';
+            } else {
+                html += '<ul class="winner-list">';
+
+                if (lineNames.length > 0) {
+                    html += `<li class="winner-list-line">LÍNEA: ${lineNames.join(' | ')}</li>`;
+                }
+
+                if (bingoNames.length > 0) {
+                    html += `<li class="winner-list-bingo">BINGO: ${bingoNames.join(' | ')}</li>`;
+                }
+
+                html += '</ul>';
+            }
+
+            displayContainer.innerHTML = html;
+        }
+
+
+        // Iniciar la aplicación cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', initializeBingo);
+
+    </script>
+</body>
+
+</html>
